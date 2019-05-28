@@ -19,6 +19,7 @@ _log.addHandler(log_handler)
 
 
 def _create_manager_machine(manager_name="manager", driver="virtualbox"):
+
     manager_ip = None
     try:
         manager_ip = subprocess.check_output(['docker-machine',
@@ -42,6 +43,7 @@ def _create_manager_machine(manager_name="manager", driver="virtualbox"):
 def _create_workers(worker_number=1,
                     worker_name="worker",
                     driver="virtualbox"):
+
     worker_ips = list()
     worker_names = list()
     _log.info("Number of workers requested: %s", worker_number)
@@ -71,6 +73,7 @@ def _create_workers(worker_number=1,
 
 
 def _set_manager_env(machine="manager"):
+
     _log.info("Set environment variables to allow running commands over ssh.")
     results = subprocess.check_output(['docker-machine', 'env', machine])
     _log.info("env manager: %s", results)
@@ -116,6 +119,7 @@ def create_private_registry(publish_ports = "5000:5000",
 
 
 def init_machines(worker_number, manager_name="manager"):
+
     manager_ip, manager_name = _create_manager_machine(manager_name)
     _log.info("manager_ip: %s", manager_ip)
     worker_names = _create_workers(worker_number=worker_number)
@@ -124,6 +128,7 @@ def init_machines(worker_number, manager_name="manager"):
 
 
 def init_swarm_manager(manager_ip):
+
     _set_manager_env(machine="manager")
 
     subprocess.check_output(['docker',
@@ -155,12 +160,11 @@ def init_swarm_workers(worker_names, join_token, manager_ip):
                                 manager_ip + ':2377'])
 
 
-def deploy_container_image_to_swarm(stack_name="flask_stack"):
+def deploy_container_image_to_swarm(stack_name="stack"):
+
     dir_path = os.path.dirname(os.path.realpath(__file__))
     _log.info("directory path: %s", dir_path)
-
     _set_manager_env(machine="manager")
-
     docker_compose_path = dir_path + "/docker-compose.yml"
     result = subprocess.check_output(['docker',
                                       'stack',
@@ -171,9 +175,9 @@ def deploy_container_image_to_swarm(stack_name="flask_stack"):
     _log.info("deploy stack status: %s", result)
 
 
-def scale_swarm_replicas(service_id='flask_stack_web', number_of_tasks=0):
-    _set_manager_env(machine="manager")
+def scale_swarm_replicas(service_id='stack_web', number_of_tasks=0):
 
+    _set_manager_env(machine="manager")
     subprocess.check_output(['docker',
                              'service',
                              'scale',
@@ -181,6 +185,7 @@ def scale_swarm_replicas(service_id='flask_stack_web', number_of_tasks=0):
 
 
 def _leave_swarm(machine):
+
     try:
         _set_manager_env(machine=machine)
         subprocess.check_output(['docker',
@@ -192,6 +197,7 @@ def _leave_swarm(machine):
 
 
 def _get_nodes_hostnames(manager_name):
+
     try:
         _set_manager_env(machine=manager_name)
         results = subprocess.check_output(['docker',
@@ -205,8 +211,9 @@ def _get_nodes_hostnames(manager_name):
 
 
 def nuke_it(manager_name="manager", nuke_vms=False):
+
     #TODO:_get_nodes_hostnames(manager_name)
-    worker_names = ["worker4", "worker3", "worker2", "worker1"]
+    worker_names = ["worker5", "worker4", "worker3", "worker2", "worker1"]
     for worker_name in worker_names:
         _log.info("Leaving swarm: %s", worker_name)
         _leave_swarm(machine=worker_name)
